@@ -11,9 +11,19 @@ flujo_solicitudes([
     solicitud(req3, '08:30-10:00', 15, [proyector])
 ]).
 
-procesar_flujo([Solicitud | Resto], Salas, Asignaciones) :-
-    evaluar_solicitud(Solicitud, Salas, Asignacion),
-    procesar_flujo(Resto, Salas, Asignaciones).
+procesar_flujo([], _, []).
 
-evaluar_solicitud(solicitud(IdSol, Franja, Asistentes, EqReq), Salas, asignada(IdSol, IdSala)) :-
-    member(sala(IdSala, CapSala, EqSala), Salas).
+procesar_flujo([Solicitud | Resto], Salas, [Asignacion | AsignacionesResto]) :-
+    evaluar_solicitud(Solicitud, Salas, Asignacion),
+    procesar_flujo(Resto, Salas, AsignacionesResto).
+
+evaluar_solicitud(solicitud(IdSol, _, Asistentes, EqReq), Salas, asignada(IdSol, IdSala)) :-
+    member(sala(IdSala, CapSala, EqSala), Salas),
+    Asistentes =< CapSala,
+    incluye_equipamiento(EqReq, EqSala).
+
+incluye_equipamiento([], _).
+
+incluye_equipamiento([Item | Resto], EqSala) :-
+    member(Item, EqSala),
+    incluye_equipamiento(Resto, EqSala).
