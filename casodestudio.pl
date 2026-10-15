@@ -26,16 +26,43 @@ actualizar_estado(solicitud(IdSol, Franja, _, _), aceptada(Sala), Ocupadas, [ocu
 
 actualizar_estado(solicitud(IdSol, Franja, _, _), rechazada(Motivo), Ocupadas, Ocupadas, Aceptadas, Aceptadas, [rechazo(IdSol, Franja, Motivo) | RchResto], RchResto).
 
-evaluar_solicitud(solicitud(_, Franja, Asistentes, EqReq), Salas, Ocupadas, aceptada(IdSala)) :-
-    member(sala(IdSala, CapSala, EqSala), Salas),
+evaluar_solicitud(Solicitud, Salas, Ocupadas, aceptada(IdSala)) :-
+    buscar_primera_sala(Salas, Solicitud, Ocupadas, IdSala), !.
+
+evaluar_solicitud(Solicitud, Salas, Ocupadas, rechazada(Motivo)) :-
+    diagnosticar_rechazo(Solicitud, Salas, Ocupadas, Motivo), !.
+
+buscar_primera_sala([sala(IdSala, CapSala, EqSala) | _], solicitud(_, Franja, Asistentes, EqReq), Ocupadas, IdSala) :-
     Asistentes =< CapSala,
     incluye_equipamiento(EqReq, EqSala),
-    \+ member(ocupada(IdSala, Franja), Ocupadas).
+    \+ member(ocupada(IdSala, Franja), Ocupadas), !.
 
-evaluar_solicitud(_, _, _, rechazada('No cumple requisitos')).
+buscar_primera_sala([_ | RestoSalas], Solicitud, Ocupadas, IdSala) :-
+    buscar_primera_sala(RestoSalas, Solicitud, Ocupadas, IdSala).
 
 incluye_equipamiento([], _).
 
 incluye_equipamiento([Item | Resto], EqSala) :-
-    member(Item, EqSala),
+    member(Item, EqSala), !,
     incluye_equipamiento(Resto, EqSala).
+
+diagnosticar_rechazo(solicitud(_, _, Asistentes, _), Salas, _, 'Capacidad insuficiente en el catalogo') :-
+    \+ existe_sala_con_capacidad(Salas, Asistentes), !.
+
+diagnosticar_rechazo(solicitud(_, _, Asistentes, EqReq), Salas, _, 'Ninguna sala posee el equipamiento requerido') :-
+    \+ existe_sala_con_cap_y_eq(Salas, Asistentes, EqReq), !.
+
+diagnosticar_rechazo(_, _, _, 'Salas compatibles ocupadas').
+
+existe_sala_con_capacidad([sala(_, CapSala, _) | _], Asistentes) :-
+    Asistentes =< CapSala, !.
+
+existe_sala_con_capacidad([_ | Resto], Asistentes) :-
+    existe_sala_con_capacidad(Resto, Asistentes).
+
+existe_sala_con_cap_y_eq([sala(_, CapSala, EqSala) | _], Asistentes, EqReq) :-
+    Asistentes =< CapSala,
+    incluye_equipamiento(EqReq, EqSala), !.
+
+existe_sala_con_cap_y_eq([_ | Resto], Asistentes, EqReq) :-
+    existe_sala_con_cap_y_eq(Resto, Asistentes, EqReq).
