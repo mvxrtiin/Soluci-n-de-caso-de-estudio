@@ -52,7 +52,7 @@ diagnosticar_rechazo(solicitud(_, _, Asistentes, _), Salas, _, 'Capacidad insufi
 diagnosticar_rechazo(solicitud(_, _, Asistentes, EqReq), Salas, _, 'Ninguna sala posee el equipamiento requerido') :-
     \+ existe_sala_con_cap_y_eq(Salas, Asistentes, EqReq), !.
 
-diagnosticar_rechazo(_, _, _, 'Salas compatibles ocupadas').
+diagnosticar_rechazo(_, _, _, 'Salas compatibles ocupadas en la franja horaria').
 
 existe_sala_con_capacidad([sala(_, CapSala, _) | _], Asistentes) :-
     Asistentes =< CapSala, !.
@@ -66,3 +66,23 @@ existe_sala_con_cap_y_eq([sala(_, CapSala, EqSala) | _], Asistentes, EqReq) :-
 
 existe_sala_con_cap_y_eq([_ | Resto], Asistentes, EqReq) :-
     existe_sala_con_cap_y_eq(Resto, Asistentes, EqReq).
+
+ejecutar :-
+    catalogo_salas(Salas),
+    flujo_solicitudes(Solicitudes),
+    procesar_flujo(Solicitudes, Salas, [], Aceptadas, Rechazadas),
+    writeln('\n--- SOLICITUDES ACEPTADAS ---'),
+    imprimir_aceptadas(Aceptadas),
+    writeln('\n--- SOLICITUDES RECHAZADAS ---'),
+    imprimir_rechazadas(Rechazadas),
+    writeln('').
+
+imprimir_aceptadas([]).
+imprimir_aceptadas([asignada(IdSol, IdSala, Franja) | Resto]) :-
+    format('  [OK] Solicitud ~w -> Sala ~w (~w)~n', [IdSol, IdSala, Franja]),
+    imprimir_aceptadas(Resto).
+
+imprimir_rechazadas([]).
+imprimir_rechazadas([rechazo(IdSol, Franja, Motivo) | Resto]) :-
+    format('  [X]  Solicitud ~w (~w) -> Rechazada: ~w~n', [IdSol, Franja, Motivo]),
+    imprimir_rechazadas(Resto).
