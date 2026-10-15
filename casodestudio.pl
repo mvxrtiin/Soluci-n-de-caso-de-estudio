@@ -15,6 +15,9 @@ flujo_solicitudes([
     solicitud(req7, '10:15-11:45', 12, [pizarra])
 ]).
 
+% Punto 1: Variables logicas
+% Aqui no se modifica el valor de las variables que ya existen
+% En su lugar, se arman las listas de salida conectando variables vacias paso a paso mientras avanza el programa
 procesar_flujo([], _, _, [], []).
 
 procesar_flujo([Solicitud | Resto], Salas, Ocupadas, Aceptadas, Rechazadas) :-
@@ -22,10 +25,17 @@ procesar_flujo([Solicitud | Resto], Salas, Ocupadas, Aceptadas, Rechazadas) :-
     actualizar_estado(Solicitud, Resultado, Ocupadas, NuevasOcupadas, Aceptadas, AcResto, Rechazadas, RchResto),
     procesar_flujo(Resto, Salas, NuevasOcupadas, AcResto, RchResto).
 
+% Punto 2: Unificacion estructural
+% A diferencia de la programacion funcional, aqui se comparan patrones completos de datos
+% para saber que camino tomar y asignar varias variables al mismo tiempo
 actualizar_estado(solicitud(IdSol, Franja, _, _), aceptada(Sala), Ocupadas, [ocupada(Sala, Franja) | Ocupadas], [asignada(IdSol, Sala, Franja) | AcResto], AcResto, Rechazadas, Rechazadas).
 
 actualizar_estado(solicitud(IdSol, Franja, _, _), rechazada(Motivo), Ocupadas, Ocupadas, Aceptadas, Aceptadas, [rechazo(IdSol, Franja, Motivo) | RchResto], RchResto).
 
+% Punto 3: Determinismo garantizado
+% Usamos el simbolo de corte para detener la busqueda apenas encontramos
+% la primera sala que sirve o identificamos el motivo del rechazo
+% Evita que el programa siga buscando opciones y asegura un unico camino
 evaluar_solicitud(Solicitud, Salas, Ocupadas, aceptada(IdSala)) :-
     buscar_primera_sala(Salas, Solicitud, Ocupadas, IdSala), !.
 
