@@ -7,4 +7,4 @@
 Desde la terminal, ubicado en el directorio del archivo `casodestudio.pl`, ejecuta:
 
 ```bash
-swipl -q -s asignacion_salas.pl -g ejecutar -t halt
+swipl -q -s asignacion_salas.pl -g ejecutar
